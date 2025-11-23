@@ -27,6 +27,7 @@ import java.util.function.LongSupplier;
 
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.core.CollectionFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.core.convert.TypeDescriptor;
@@ -791,8 +792,14 @@ class JpaCodeBlocks {
 									"return ($1T) $2T.getSharedInstance().convert($3T.of($4L.getResultList()), $5T.valueOf($3T.class), $5T.valueOf($1T.class))",
 									methodReturn.toClass(), DefaultConversionService.class, Streamable.class, queryVariableName,
 									TypeDescriptor.class);
-						} else {
+						} else if (isList(methodReturn)) {
 							builder.addStatement("return ($T) $L.getResultList()", methodReturn.getTypeName(), queryVariableName);
+						} else {
+							builder.addStatement("$T resultList = $L.getResultList()", List.class, queryVariableName);
+							builder.addStatement("$T result = $T.createCollection($T.class, resultList.size())",
+									java.util.Collection.class, CollectionFactory.class, methodReturn.toClass());
+							builder.addStatement("result.addAll(resultList)");
+							builder.addStatement("return ($T) result", methodReturn.getTypeName());
 						}
 					} else if (queryMethod.isStreamQuery()) {
 						builder.addStatement("return ($T) $L.getResultStream()", methodReturn.getTypeName(), queryVariableName);
@@ -833,6 +840,10 @@ class JpaCodeBlocks {
 
 		private static boolean isStreamableWrapper(MethodReturn methodReturn) {
 			return !isStreamable(methodReturn) && Streamable.class.isAssignableFrom(methodReturn.toClass());
+		}
+
+		private static boolean isList(MethodReturn methodReturn) {
+			return methodReturn.toClass().equals(List.class);
 		}
 
 		public static boolean returnsModifying(Class<?> returnType) {

@@ -21,6 +21,7 @@ import jakarta.persistence.EntityManager;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.hibernate.proxy.HibernateProxy;
@@ -660,6 +661,15 @@ class JpaRepositoryContributorIntegrationTests {
 
 		assertThat(page).isNotEmpty();
 	}
+
+    @Test // GH-4094
+    void shouldConvertListResultForSetReturningDerivedQuery() {
+
+        Set<User> result = fragment.findDistinctByLastnameStartingWith("Skywalker");
+
+        assertThat(result).isNotNull().hasSize(2).extracting(User::getEmailAddress)
+            .containsExactlyInAnyOrder(vader.getEmailAddress(), luke.getEmailAddress());
+    }
 
 	void todo() {
 

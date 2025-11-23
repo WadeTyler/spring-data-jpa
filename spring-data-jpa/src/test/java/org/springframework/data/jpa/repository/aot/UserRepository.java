@@ -19,6 +19,7 @@ import jakarta.persistence.QueryHint;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.springframework.data.domain.Limit;
@@ -67,6 +68,8 @@ interface UserRepository extends CrudRepository<User, Integer> {
 	List<User> findByLastnameStartingWith(String lastname, Sort sort, Limit limit);
 
 	List<User> findByLastnameStartingWith(String lastname, Pageable page);
+
+	Set<User> findDistinctByLastnameStartingWith(String lastname);
 
 	Streamable<User> findStreamableByLastnameStartingWith(String lastname);
 
